@@ -25,14 +25,13 @@ def getAvSignature(filename):
     signatures=[]
     if json_response["response_code"] == 0: 
         print "[!] File not scanned" 
-        return signatures
+        return collections.Counter(signatures)
     
     for av,value in json_response["scans"].iteritems():
          signatures.append(value["result"])
       
     counter=collections.Counter(signatures)
-    print(counter)   
-    return signatures
+    return counter
     
     
 def md5(fname):
@@ -42,20 +41,23 @@ def md5(fname):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
         
-def packer_detect(file,path_rules):
-    for file in list(glob.glob('*.yara')):      
-        rules = yara.compile(args.yara) 
-        yara_matches = rules.match(file)
+def packer_detect(pe_file,path_rules):
+    current_cwd = os.getcwd()
+    os.chdir( path_rules )
+    packer = None
+    for file in list(glob.glob('*.yara')):
+        print "[I] Testing  signature '{}' ".format(file)
         try:
-            for yara_match in yara_matches['main']:
-                try:
-                    print('Yara: ' + yara_match['meta']['description'])
-                except KeyError:
-                    pass
-        except KeyError:
-            pass
-            
-            
+            rules = yara.compile(file) 
+        except yara.SyntaxError:
+            print "[!] Cannot process yara signature: {}".format(file)
+        yara_matches = rules.match(current_cwd + "/" + pe_file)
+        if yara_matches:
+            print "[+] Packer detected {}".format(yara_matches[0])
+            packer = yara_matches[0]
+    os.chdir(current_cwd)
+    return packer
+    
 def get_dll(pe):
     """ Extract the imported DLL files from the PE file """
     # If the PE has the attribute, create a list with DLL's
