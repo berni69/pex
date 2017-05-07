@@ -21,7 +21,7 @@ def getAvSignature(filename):
     response = requests.get('https://www.virustotal.com/vtapi/v2/file/report',
     params=params, headers=headers)
     json_response = response.json()
-    print json.dumps(json_response, indent=4, sort_keys=True)
+    #print json.dumps(json_response, indent=4, sort_keys=True)
     signatures=[]
     if json_response["response_code"] == 0: 
         print "[!] File not scanned" 
@@ -30,7 +30,7 @@ def getAvSignature(filename):
     for av,value in json_response["scans"].iteritems():
          signatures.append(value["result"])
       
-    counter=collections.Counter(a)
+    counter=collections.Counter(signatures)
     print(counter)   
     return signatures
     
