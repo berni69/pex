@@ -40,5 +40,21 @@ if is_packed:
         print "[I] I don't know how to unpack this"
         
 # Recargamos el archivo por si estuviera empaquetado
+pe.close()
 pe = pefile.PE(pe_filename)
-print pexutils.get_dll(pe)
+print "[+] Libraries"
+for lib in  pexutils.get_dll(pe):  #sigs.iteritems():
+    print " {} ".format(lib)
+print "[+] Exporting import table to: importtable.txt"
+with open('importtable.txt', 'w') as impf:
+    for entry in pe.DIRECTORY_ENTRY_IMPORT:
+        impf.write(entry.dll + "\n")
+        for imp in entry.imports:
+            if imp.name in pexutils.suspicious_imports: print "[!] Suspicious import: {}".format(imp.name)
+            impf.write('\t {:<10} {} \n'.format(hex(imp.address), imp.name))
+        
+#print pexutils.get_strings(pe)
+#pexutils.get_resources(pe)
+pexutils.extract_icon(pe)
+
+pe.close()
